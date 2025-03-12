@@ -30,4 +30,12 @@ build-compute-stats-lambda:
 build-shell:
 	docker run -e GOOS=linux -e GOARCH=arm64 -e CGO_ENABLED=0 -e GOFLAGS=-trimpath -v ./:/app -w /app -it golang:$(GO_VERSION) bash
 
-.PHONY: build-lambdas build-api-lambdas build-compute-lambdas build-compute-stats-lambda
+# Requires AWS credentials set along with environment variables for
+#  - CORECHECK_S3_API_BUCKET
+#  - CORECHECK_S3_COMPUTE_BUCKET
+# set to the values consistent with the Terraform configuration for the deploy environment.
+deploy-lambdas:
+	aws s3 cp --recursive --exclude "*" --include "*.zip" deploy/lambdas/api/ s3://$${CORECHECK_S3_API_BUCKET}/
+	aws s3 cp --recursive --exclude "*" --include "*.zip" deploy/lambdas/compute/ s3://$${CORECHECK_S3_COMPUTE_BUCKET}/
+
+.PHONY: build-lambdas build-api-lambdas build-compute-lambdas build-compute-stats-lambda deploy-lambdas
